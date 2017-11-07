@@ -1,0 +1,6 @@
+*
+!/.gitignore
+!/bootstrap.sh
+!/packages/
+!/packages/packages
+!/packages/python

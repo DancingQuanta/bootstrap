@@ -165,6 +165,15 @@ if [[ -f $DIR/packages/packages ]]; then
 fi
 
 ###############################################################################
+# Packages installed by other means
+###############################################################################
+
+log "Installing packages by other means"
+if [[ -d $DIR/packages/custom ]]; then
+  for file in $DIR/packages/custom/*.sh; do $file 2>/dev/null; done
+fi
+
+###############################################################################
 # python
 ###############################################################################
 

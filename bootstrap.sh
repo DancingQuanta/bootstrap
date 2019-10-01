@@ -84,85 +84,10 @@ download() {
 ## Bootstrap
 ## ---------------------------------------------------------------------------
 
-###############################################################################
-# User
-###############################################################################
-
-echo ""
-echo "STEP ONE: SETUP YOUR USER ACCOUNT AND HOSTNAME."
-echo "----------------------------------------"
-echo ""
-
-create_user() {
-  # Setup my user account.
-  echo -n "Enter your new username: "
-  read NEW_USER
-  stty -echo
-  read -p "New password for $NEW_USER (leave blank to disable): " NEW_PASS; echo
-  stty echo
-
-  if [[ "$NEW_PASS" = "" ]]; then
-    useradd -m -s /bin/bash -G sudo $NEW_USER
-  else
-    useradd -m -s /bin/bash -G sudo $NEW_USER \
-      -p `echo "$NEW_PASS" | openssl passwd -1 -stdin`
-  fi
-  unset $NEW_PASS
-}
-
-rename_hostname() {
-  # Update hostname
-  echo -n "Choose a hostname: "
-  read NEW_HOSTNAME
-  CURRENT_HOSTNAME=$(hostname)
-  echo "$NEW_HOSTNAME" > /etc/hostname
-  sed -i "s/$CURRENT_HOSTNAME/$NEW_HOSTNAME/" /etc/hosts
-  hostname $NEW_HOSTNAME
-}
-
-while true; do
-  read -p "Create a new user? [y/n]" yn
-  case $yn in
-    [Yy]* ) create_user; break;;
-    [Nn]* ) break;;
-    * ) echo "Please answer yes or no.";;
-  esac
-done
-
-while true; do
-  read -p "Rename hostname? [y/n]" yn
-  case $yn in
-    [Yy]* ) rename_hostname; break;;
-    [Nn]* ) break;;
-    * ) echo "Please answer yes or no.";;
-  esac
-done
-
-# Setup home bin 
-[ -d "$HOMEBIN" ] || mkdir -p $HOMEBIN && log "Created $HOMEBIN"
-# Append $HOMEBIN to PATH if directory exists and it is not yet in PATH
-if [[ $UID -ge 1000 ]] && [[ -d $HOMEBIN ]] && [[ -z $(echo $PATH | grep -o $HOMEBIN) ]]; then
-    export PATH=$HOMEBIN:$PATH
-    log "added $HOMEBIN to path"
-fi
 
 ###############################################################################
 # Packages
 ###############################################################################
-
-log "Upgrading packages"
-upgrade
-
-log "Installing packages"
-if [[ -f $DIR/packages/packages ]]; then
-  exec<$DIR/packages/packages
-  while read line
-  do
-    if [[ ! "$line" =~ (^#|^$) ]]; then
-      install_package install $line
-    fi
-  done
-fi
 
 ###############################################################################
 # Packages installed by other means
@@ -171,23 +96,6 @@ fi
 log "Installing packages by other means"
 if [[ -d $DIR/packages/custom ]]; then
   for file in $DIR/packages/custom/*.sh; do $file 2>/dev/null; done
-fi
-
-###############################################################################
-# python
-###############################################################################
-
-log "Installing python modules"
-packages=
-if [[ -f $DIR/packages/python ]]; then
-  exec<$DIR/packages/python
-  while read line
-  do
-    if [[ ! "$line" =~ (^#|^$) ]]; then
-      packages="$packages $line"
-    fi
-  done
-  pip install $packages
 fi
 
 ###############################################################################
